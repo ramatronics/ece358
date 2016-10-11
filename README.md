@@ -1,2 +1,2 @@
 # ece358
-Computer Networks
+This course is a comprehensive introduction to computer networks. The focus is on the concepts, the protocols, and the fundamental design principles that have contributed to the success of the Internet. Topics include: history of the Internet, transmission media and technologies, switching and multiplexing, protocols and layering, LAN (wired and wireless), congestion/flow/error control, routing, addressing, internetworking (Internet) including TCP.
