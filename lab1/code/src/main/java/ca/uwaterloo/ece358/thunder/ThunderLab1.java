@@ -27,9 +27,9 @@ public class ThunderLab1 {
     }
 
     private static void runMD1QueueSimulation() {
-        MD1QueueSession md1QueueSession = new MD1QueueSession(timeLength, packetSize, service);
-
         List<QueueSimulationReport>[] reports = new List[simulationSampleSize];
+
+        MD1QueueSession md1QueueSession = new MD1QueueSession(timeLength, packetSize, service);
         for (int i = 0; i < reports.length; i++) {
             reports[i] = md1QueueSession.runSimulations();
         }
