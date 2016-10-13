@@ -1,68 +1,80 @@
 package ca.uwaterloo.ece358.thunder.data;
 
+import java.util.Random;
+
 public class LinkBuffer {
     public int length;
-    public LinkNode head;
-    public LinkNode tail;
-    public int max;
-    public int last;
+    private LinkNode head;
+    private LinkNode tail;
+    private int max;
+    private int last;
 
     public LinkBuffer() {
-        length = 0;
-        last = 0;
-        max = -1;
+        this(-1);
     }
 
     public LinkBuffer(int size) {
-        length = 0;
+        this.last = 0;
+        this.length = 0;
         this.max = size;
-        last = 0;
     }
 
-    public boolean Append(int data) {
-        if (length + 1 <= max || max == -1) {
-            LinkNode newnode = new LinkNode(data);
+    public boolean append(int data) {
+        //Packet loss can never happen in infinite queue
+        if (max == -1 || length + 1 <= max) {
+            LinkNode n = new LinkNode(data);
 
             if (length == 0) {
-                head = newnode;
-                tail = newnode;
+                head = n;
+                tail = n;
                 head.time = data;
                 last = data;
             } else {
-                tail.next = newnode;
-                tail = newnode;
+                tail.next = n;
+                tail = n;
                 last = tail.info;
             }
 
             length++;
             return true;
-        } else
-            last = data;
-        return false;
-    }
+        }
 
-    public int Last() {
-        return last;
+        last = data;
+        return false;
     }
 
     public int check(int x, int service) {
         if (length != 0) {
             if (head.time + service == x) {
 
-                LinkNode temp;
+                LinkNode n;
                 if (length == 1) {
-                    temp = head;
+                    n = head;
                     head = null;
                 } else {
-                    temp = head;
+                    n = head;
                     head = head.next;
                     head.time = x + 1;
                 }
+
                 length--;
-                return x - temp.info;
+                return x - n.info;
             }
         }
         return 0;
+    }
+
+    public double getRandom(double lambda) {
+        Random rng = new Random();
+
+        //To get more distribution of randoms
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException ex) {
+            //Do nothing
+        }
+
+        return (-1 / lambda) * Math.log(1 - rng.nextDouble());
     }
 
 }
