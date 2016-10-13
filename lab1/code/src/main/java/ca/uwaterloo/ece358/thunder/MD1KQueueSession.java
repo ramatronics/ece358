@@ -6,14 +6,15 @@ import ca.uwaterloo.ece358.thunder.data.QueueSimulationReport;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MD1QueueSession {
+public class MD1KQueueSession {
     private int timeLength;
     private int processTime;
     private int packetSize;
-    private int bufferSize = -1;
+    private int bufferSize;
     private double serviceTime;
 
-    public MD1QueueSession(int ticks, int packetSize, double service) {
+    public MD1KQueueSession(int bufferSize, int ticks, int packetSize, double service) {
+        this.bufferSize = bufferSize;
         this.timeLength = ticks;
         this.packetSize = packetSize;
         this.serviceTime = service;
@@ -38,7 +39,7 @@ public class MD1QueueSession {
 
     private double[] extractLambdas() {
         List<Double> lambdas = new ArrayList<Double>();
-        for (double i = 0.3; i < 0.75; i += 0.1) {
+        for (double i = 0.5; i < 1.5; i += 0.1) {
             lambdas.add((i * processTime) / timeLength);
         }
 

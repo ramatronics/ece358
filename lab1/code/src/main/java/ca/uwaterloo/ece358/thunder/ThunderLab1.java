@@ -27,14 +27,35 @@ public class ThunderLab1 {
 
         MD1QueueSession md1QueueSession = new MD1QueueSession(timeLength, packetSize, service);
 
-        List<QueueSimulationReport> tmp = md1QueueSession.runSimulations();
         boolean header = false;
-        for(QueueSimulationReport q : tmp){
-            if(!header) {
-                System.out.println(QueueSimulationReport.getCSVHeader());
-                header = true;
+        for (int i = 0; i < 5; i++) {
+            List<QueueSimulationReport> tmp = md1QueueSession.runSimulations();
+            for (QueueSimulationReport q : tmp) {
+                if (!header) {
+                    System.out.println(QueueSimulationReport.getCSVHeader());
+                    header = true;
+                }
+                System.out.println(q.toCSV());
             }
-            System.out.println(q.toCSV());
+        }
+
+
+        header = false;
+
+        int[] bufferSizes = {10, 25, 50};
+
+        for (int j = 0; j < bufferSizes.length; j++) {
+            MD1KQueueSession md1KQueueSession = new MD1KQueueSession(bufferSizes[j], timeLength, packetSize, service);
+            for (int i = 0; i < 5; i++) {
+                List<QueueSimulationReport> tmp = md1KQueueSession.runSimulations();
+                for (QueueSimulationReport q : tmp) {
+                    if (!header) {
+                        System.out.println(QueueSimulationReport.getCSVHeader());
+                        header = true;
+                    }
+                    System.out.println(q.toCSV());
+                }
+            }
         }
     }
 }

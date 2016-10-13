@@ -1,10 +1,11 @@
 package ca.uwaterloo.ece358.thunder.data;
 
 public class QueueSimulationReport {
+    public int bufferSize;
     public int packetSize;
     public double serviceTime;
     public double lambda;
-    public int timeLength = 0;
+    public int timeLength;
 
     public int idle = 0;
     public int packetLoss = 0;
@@ -12,7 +13,8 @@ public class QueueSimulationReport {
     public int sentPackets = 0;
     public int packetBuffer = 0;
 
-    public QueueSimulationReport(int packetSize, double serviceTime, double lambda, int timeLength) {
+    public QueueSimulationReport(int bufferSize, int packetSize, double serviceTime, double lambda, int timeLength) {
+        this.bufferSize = bufferSize;
         this.packetSize = packetSize;
         this.serviceTime = serviceTime;
         this.lambda = lambda;
@@ -26,6 +28,7 @@ public class QueueSimulationReport {
         double averagePacketsInBuffer = ((double) packetBuffer / (timeLength * 1000000));
 
         StringBuilder sb = new StringBuilder();
+        sb.append(bufferSize + ",");
         sb.append(packetSize + ",");
         sb.append(serviceTime + ",");
         sb.append(lambda + ",");
@@ -39,6 +42,6 @@ public class QueueSimulationReport {
     }
 
     public static String getCSVHeader() {
-        return "packetsize,servicetime,lambda,timelength,averagepacket,packetloss,idletime,sojourn,packetsinbuffer";
+        return "buffersize,packetsize,servicetime,lambda,timelength,averagepacket,packetloss,idletime,sojourn,packetsinbuffer";
     }
 }
