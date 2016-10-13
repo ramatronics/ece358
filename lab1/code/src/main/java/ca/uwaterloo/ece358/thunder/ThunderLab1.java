@@ -3,8 +3,10 @@ package ca.uwaterloo.ece358.thunder;
 import ca.uwaterloo.ece358.thunder.data.LinkBuffer;
 import ca.uwaterloo.ece358.thunder.data.QueueSimulationReport;
 
+import java.util.List;
+
 public class ThunderLab1 {
-    private static final int MILLION = 1000000;
+    public static final int MILLION = 1000000;
 
     public static void main(String[] args) {
 
@@ -18,46 +20,21 @@ public class ThunderLab1 {
         int packetSize = 2000;
 
         //Service time received by a packet (bits/second) ---
-        double service = MILLION;
+        double service = 1 * MILLION;
 
         //How long to keep queueing for
         int timeLength = 10;
 
-        for (int y = 0; y < 5; ) {
-            QueueSimulationReport qReport = new QueueSimulationReport(timeLength);
+        MD1QueueSession md1QueueSession = new MD1QueueSession(timeLength, packetSize, service);
 
-            LinkBuffer queue = new LinkBuffer(bufferSize);
-
-            int processTime = (int) (packetSize / service * MILLION);
-            int nextPacket = (int) (queue.getRandom(lambda) * MILLION);
-            int last = 0;
-
-            for (int x = 0; x < timeLength * MILLION; x++) {
-                if (queue.length == 0) {
-                    qReport.idle++;
-                }
-
-                //Make sure current packet is greater than previous packet
-                if (x == last + nextPacket) {
-                    qReport.sentPackets++;
-                    if (!queue.append(x)) {
-                        qReport.packetLoss++;
-                    }
-
-                    nextPacket = (int) (queue.getRandom(lambda) * MILLION);
-                    last = x;
-                }
-
-                qReport.cumulativeTime += queue.check(x, processTime);
-                qReport.packetBuffer += queue.length;
+        List<QueueSimulationReport> tmp = md1QueueSession.runSimulations();
+        boolean header = false;
+        for(QueueSimulationReport q : tmp){
+            if(!header) {
+                System.out.println(QueueSimulationReport.getCSVHeader());
+                header = true;
             }
-
-            qReport.cumulativeTime += queue.length * processTime;
-
-            if (qReport.sentPackets > lambda * timeLength - 200 && qReport.sentPackets < lambda * timeLength + 200) {
-                qReport.print();
-                y++;
-            }
+            System.out.println(q.toCSV());
         }
     }
 }

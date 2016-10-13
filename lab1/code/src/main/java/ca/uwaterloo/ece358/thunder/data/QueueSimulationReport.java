@@ -1,23 +1,44 @@
 package ca.uwaterloo.ece358.thunder.data;
 
 public class QueueSimulationReport {
+    public int packetSize;
+    public double serviceTime;
+    public double lambda;
+    public int timeLength = 0;
+
     public int idle = 0;
     public int packetLoss = 0;
     public int cumulativeTime = 0;
     public int sentPackets = 0;
     public int packetBuffer = 0;
-    public int timeLength = 0;
 
-    public QueueSimulationReport(int timeLength) {
+    public QueueSimulationReport(int packetSize, double serviceTime, double lambda, int timeLength) {
+        this.packetSize = packetSize;
+        this.serviceTime = serviceTime;
+        this.lambda = lambda;
         this.timeLength = timeLength;
     }
 
-    public void print() {
-        System.out.println(sentPackets);
-        System.out.println("The Average Packet: " + (double) sentPackets / timeLength);
-        System.out.println("The Packet Loss is: " + packetLoss);
-        System.out.println("The Service Idle time is: " + ((double) idle / 1000000) + " seconds");
-        System.out.println("The Sojourn time is: " + ((double) cumulativeTime / ((sentPackets - packetLoss) * 1000)) + " ms");
-        System.out.println("The average amount of packets in buffer is: " + ((double) packetBuffer / (timeLength * 1000000)));
+    public String toCSV() {
+        double averagePacket = (double) sentPackets / timeLength;
+        double idleTime = ((double) idle / 1000000);
+        double sojournTime = ((double) cumulativeTime / ((sentPackets - packetLoss) * 1000));
+        double averagePacketsInBuffer = ((double) packetBuffer / (timeLength * 1000000));
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(packetSize + ",");
+        sb.append(serviceTime + ",");
+        sb.append(lambda + ",");
+        sb.append(timeLength + ",");
+        sb.append(averagePacket + ",");
+        sb.append(packetLoss + ",");
+        sb.append(idleTime + ",");
+        sb.append(sojournTime + ",");
+        sb.append(averagePacketsInBuffer);
+        return sb.toString();
+    }
+
+    public static String getCSVHeader() {
+        return "packetsize,servicetime,lambda,timelength,averagepacket,packetloss,idletime,sojourn,packetsinbuffer";
     }
 }

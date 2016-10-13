@@ -9,14 +9,15 @@ public class LinkBuffer {
     private int max;
     private int last;
 
-    public LinkBuffer() {
-        this(-1);
-    }
+    private double lambda;
+    private Random random;
 
-    public LinkBuffer(int size) {
+    public LinkBuffer(int size, double lambda) {
         this.last = 0;
         this.length = 0;
         this.max = size;
+        this.lambda = lambda;
+        this.random = new Random();
     }
 
     public boolean append(int data) {
@@ -24,12 +25,14 @@ public class LinkBuffer {
         if (max == -1 || length + 1 <= max) {
             LinkNode n = new LinkNode(data);
 
+            //If empty, assign to all tracers
             if (length == 0) {
                 head = n;
                 tail = n;
                 head.time = data;
                 last = data;
             } else {
+                //Append to LinkedBuffer
                 tail.next = n;
                 tail = n;
                 last = tail.info;
@@ -43,30 +46,33 @@ public class LinkBuffer {
         return false;
     }
 
-    public int check(int x, int service) {
-        if (length != 0) {
-            if (head.time + service == x) {
-
-                LinkNode n;
-                if (length == 1) {
-                    n = head;
-                    head = null;
-                } else {
-                    n = head;
-                    head = head.next;
-                    head.time = x + 1;
-                }
-
-                length--;
-                return x - n.info;
-            }
+    public int check(int referenceTime, int processTime) {
+        if (length == 0) {
+            return 0;
         }
+
+        // Add head time to process time and see if packet x can be processed
+        if (head.time + processTime == referenceTime) {
+            LinkNode n;
+            if (length == 1) {
+                n = head;
+                head = null;
+            } else {
+                n = head;
+                head = head.next;
+
+                //Update the current head time
+                head.time = referenceTime + 1;
+            }
+
+            length--;
+            return referenceTime - n.info;
+        }
+
         return 0;
     }
 
-    public double getRandom(double lambda) {
-        Random rng = new Random();
-
+    public double getRandom() {
         //To get more distribution of randoms
         try {
             Thread.sleep(5);
@@ -74,7 +80,7 @@ public class LinkBuffer {
             //Do nothing
         }
 
-        return (-1 / lambda) * Math.log(1 - rng.nextDouble());
+        return (-1 / lambda) * Math.log(1 - random.nextDouble());
     }
 
 }
