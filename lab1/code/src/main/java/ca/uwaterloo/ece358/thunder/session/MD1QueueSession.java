@@ -1,24 +1,29 @@
-package ca.uwaterloo.ece358.thunder;
+package ca.uwaterloo.ece358.thunder.session;
 
+import ca.uwaterloo.ece358.thunder.ThunderLab1;
 import ca.uwaterloo.ece358.thunder.data.LinkBuffer;
 import ca.uwaterloo.ece358.thunder.data.QueueSimulationReport;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MD1KQueueSession {
-    private int timeLength;
-    private int processTime;
-    private int packetSize;
-    private int bufferSize;
-    private double serviceTime;
+public class MD1QueueSession {
+    protected int timeLength;
+    protected int processTime;
+    protected int packetSize;
+    protected int bufferSize;
+    protected double serviceTime;
 
-    public MD1KQueueSession(int bufferSize, int ticks, int packetSize, double service) {
+    public MD1QueueSession(int bufferSize, int ticks, int packetSize, double service) {
         this.bufferSize = bufferSize;
         this.timeLength = ticks;
         this.packetSize = packetSize;
         this.serviceTime = service;
         this.processTime = (int) (packetSize / service * ThunderLab1.MILLION);
+    }
+
+    public MD1QueueSession(int ticks, int packetSize, double service) {
+        this(-1, ticks, packetSize, service);
     }
 
     public List<QueueSimulationReport> runSimulations() {
@@ -37,9 +42,9 @@ public class MD1KQueueSession {
         return rtnReports;
     }
 
-    private double[] extractLambdas() {
+    protected double[] extractLambdas() {
         List<Double> lambdas = new ArrayList<Double>();
-        for (double i = 0.5; i < 1.5; i += 0.1) {
+        for (double i = 0.3; i < 0.75; i += 0.1) {
             lambdas.add((i * processTime) / timeLength);
         }
 
@@ -59,23 +64,23 @@ public class MD1KQueueSession {
         int nextPacket = (int) (queue.getRandom() * ThunderLab1.MILLION);
         int last = 0;
 
-        for (int x = 0; x < timeLength * ThunderLab1.MILLION; x++) {
+        for (int time = 0; time < timeLength * ThunderLab1.MILLION; time++) {
             if (queue.length == 0) {
                 qReport.idle++;
             }
 
             //Make sure current packet is greater than previous packet
-            if (x == last + nextPacket) {
+            if (time == last + nextPacket) {
                 qReport.sentPackets++;
-                if (!queue.append(x)) {
+                if (!queue.append(time)) {
                     qReport.packetLoss++;
                 }
 
                 nextPacket = (int) (queue.getRandom() * ThunderLab1.MILLION);
-                last = x;
+                last = time;
             }
 
-            qReport.cumulativeTime += queue.check(x, processTime);
+            qReport.cumulativeTime += queue.check(time, processTime);
             qReport.packetBuffer += queue.length;
         }
 
