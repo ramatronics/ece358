@@ -45,7 +45,7 @@ public class MD1QueueSession {
     protected double[] extractLambdas() {
         List<Double> lambdas = new ArrayList<Double>();
         for (double i = 0.3; i < 0.75; i += 0.1) {
-            lambdas.add((i * processTime) / timeLength);
+            lambdas.add((i * serviceTime) / packetSize);
         }
 
         double[] rtnLambdas = new double[lambdas.size()];

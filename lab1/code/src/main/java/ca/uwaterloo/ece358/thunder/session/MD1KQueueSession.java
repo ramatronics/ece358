@@ -11,7 +11,7 @@ public class MD1KQueueSession extends MD1QueueSession {
     protected double[] extractLambdas() {
         List<Double> lambdas = new ArrayList<Double>();
         for (double i = 0.5; i < 1.5; i += 0.1) {
-            lambdas.add((i * processTime) / timeLength);
+            lambdas.add((i * serviceTime) / packetSize);
         }
 
         double[] rtnLambdas = new double[lambdas.size()];
