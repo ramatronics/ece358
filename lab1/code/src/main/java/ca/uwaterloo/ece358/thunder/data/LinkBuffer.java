@@ -35,7 +35,7 @@ public class LinkBuffer {
                 //Append to LinkedBuffer
                 tail.next = n;
                 tail = n;
-                last = tail.info;
+                last = tail.data;
             }
 
             length++;
@@ -66,7 +66,7 @@ public class LinkBuffer {
             }
 
             length--;
-            return referenceTime - n.info;
+            return referenceTime - n.data;
         }
 
         return 0;

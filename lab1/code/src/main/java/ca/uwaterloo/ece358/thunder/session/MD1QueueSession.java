@@ -27,7 +27,8 @@ public class MD1QueueSession {
     }
 
     public List<QueueSimulationReport> runSimulations() {
-        List<QueueSimulationReport> rtnReports = new ArrayList<QueueSimulationReport>();
+        List<QueueSimulationReport> rtnReports =
+                new ArrayList<QueueSimulationReport>();
 
         double[] lambdas = extractLambdas();
         for (int i = 0; i < lambdas.length; i++) {
@@ -57,7 +58,10 @@ public class MD1QueueSession {
     }
 
     private QueueSimulationReport simulate(double lambda) {
-        QueueSimulationReport qReport = new QueueSimulationReport(bufferSize, packetSize, serviceTime, lambda, timeLength);
+        QueueSimulationReport qReport =
+                new QueueSimulationReport(bufferSize,
+                        packetSize, serviceTime,
+                        lambda, timeLength);
 
         LinkBuffer queue = new LinkBuffer(bufferSize, lambda);
 
@@ -86,7 +90,8 @@ public class MD1QueueSession {
 
         qReport.cumulativeTime += queue.length * processTime;
 
-        if (qReport.sentPackets > lambda * timeLength - 200 && qReport.sentPackets < lambda * timeLength + 200) {
+        if (qReport.sentPackets > lambda * timeLength - 200 &&
+                qReport.sentPackets < lambda * timeLength + 200) {
             return qReport;
         }
 
