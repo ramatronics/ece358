@@ -27,7 +27,7 @@ public class PPersistentNetworkNode extends NetworkNode {
         }
     }
 
-    protected void slotwait() {
+    protected void slotWait() {
         if (!this.network.getState().equals(NetworkState.IDLE)) {
             handleCollision();
         } else {
