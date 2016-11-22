@@ -5,8 +5,8 @@ import ca.uwaterloo.ece358.thunder.data.state.BusState;
 import ca.uwaterloo.ece358.thunder.data.state.NodeState;
 
 public class PPersistentNetworkNode extends NetworkNode {
-    public PPersistentNetworkNode(long propagationDelay, NetworkBus network, long lambda, int packetLength, double P) {
-        super(propagationDelay, network, lambda, packetLength, P);
+    public PPersistentNetworkNode(NetworkBus bus, long propagationDelay, long lambda, int packetLength, double P) {
+        super(bus, propagationDelay, lambda, packetLength, P);
     }
 
     private void randomPersistenceSensing(NodeState randomMissState, long randomMissTime) {
@@ -28,11 +28,10 @@ public class PPersistentNetworkNode extends NetworkNode {
     protected void slotWait() {
         if (!bus.getNetworkState().equals(BusState.IDLE)) {
             handleCollision();
-            return;
-        }
-
-        if (this.t_current == 0) {
-            randomPersistenceSensing(this.state, SENSING_TIME);
+        } else {
+            if (this.t_current == 0) {
+                randomPersistenceSensing(this.state, SENSING_TIME);
+            }
         }
     }
 

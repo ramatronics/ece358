@@ -24,7 +24,7 @@ public class NetworkNode {
 
     protected double persistence;
 
-    public NetworkNode(long propagationDelay, NetworkBus networkBus, long packetRate, int packetLength, double persistence) {
+    public NetworkNode(NetworkBus networkBus, long propagationDelay, long packetRate, int packetLength, double persistence) {
         this.bus = networkBus;
         this.state = NodeState.IDLE;
 
@@ -83,7 +83,8 @@ public class NetworkNode {
         }
     }
 
-    protected void slotWait() { }
+    protected void slotWait() {
+    }
 
     public long getPacketsReceived() {
         return this.packetsReceived;
@@ -109,18 +110,16 @@ public class NetworkNode {
     }
 
     protected void sense() {
-        if(!preSense()) {
+        if (!preSense()) {
             this.setStateAndTime(NodeState.TRANSMITTING, this.propagationDelay + this.packetLength);
             this.bus.sense();
         }
     }
 
     protected void randomWait() {
-        if (this.t_current > 0) {
-            return;
+        if (this.t_current == 0) {
+            this.setStateAndTime(NodeState.SENSING, SENSING_TIME);
         }
-
-        this.setStateAndTime(NodeState.SENSING, SENSING_TIME);
     }
 
     protected void transmit() {
@@ -133,12 +132,13 @@ public class NetworkNode {
             this.setStateAndTime(NodeState.IDLE, generateRandom(this.packetRate));
             this.bus.push();
             this.packetsReceived++;
+
             this.backoffCounter = 0;
         }
     }
 
     protected void jam() {
-        if(t_current == 0) {
+        if (t_current == 0) {
             this.bus.push();
             if (this.backoffCounter < 10) {
                 this.backoffCounter++;

@@ -79,9 +79,9 @@ public class Simulator {
         final long propagationDelay = (long) ((((double) i * 10.0) / 2E8) * 1E6);
 
         if (p == 0.0 || p == 1.0) {
-            return new NetworkNode(propagationDelay, this.networkBus, lambda, this.packetLength, p);
+            return new NetworkNode(this.networkBus, propagationDelay, lambda, this.packetLength, p);
         } else {
-            return new PPersistentNetworkNode(propagationDelay, this.networkBus, lambda, this.packetLength, p);
+            return new PPersistentNetworkNode(this.networkBus, propagationDelay, lambda, this.packetLength, p);
         }
     }
 }
