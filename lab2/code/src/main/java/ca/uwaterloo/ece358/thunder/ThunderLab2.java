@@ -7,7 +7,7 @@ public class ThunderLab2 {
     private static final int PACKET_LENGTH = 1500;
 
     public static void main(String[] args) {
-        int[] n = {20, 40, 60, 80, 100};
+        int[] n = {5, 10, 15, 20, 40, 60, 80, 100};
         int[] lambdas = {6, 20};
 
         for (int i = 0; i < lambdas.length; i++) {
