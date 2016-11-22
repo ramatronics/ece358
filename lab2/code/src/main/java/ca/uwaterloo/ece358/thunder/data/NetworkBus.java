@@ -9,13 +9,13 @@ public class NetworkBus {
     private List<Boolean> queue;
     private int endOfCycleSize;
 
-    public NetworkBus(){
+    public NetworkBus() {
         this.queue = new ArrayList<Boolean>();
         this.endOfCycleSize = 0;
     }
 
     public BusState getNetworkState() {
-        if(endOfCycleSize > 1)
+        if (endOfCycleSize > 1)
             return BusState.COLLISION;
 
         if (endOfCycleSize == 1) {

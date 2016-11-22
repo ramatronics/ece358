@@ -104,9 +104,9 @@ public class NetworkNode {
         if (!bus.getNetworkState().equals(BusState.IDLE)) {
             this.setStateAndTime(NodeState.RANDOM_WAIT, generateRandomBackoff(this.backoffCounter));
             return true;
+        } else {
+            return this.t_current != 0;
         }
-
-        return this.t_current != 0;
     }
 
     protected void sense() {
@@ -125,25 +125,21 @@ public class NetworkNode {
     protected void transmit() {
         if (this.bus.getNetworkState().equals(BusState.COLLISION)) {
             this.setStateAndTime(NodeState.JAMMING, JAMMING_TIME);
-            return;
-        }
+        } else {
+            if (t_current == 0) {
+                this.setStateAndTime(NodeState.IDLE, generateRandom(this.packetRate));
+                this.bus.push();
 
-        if (t_current == 0) {
-            this.setStateAndTime(NodeState.IDLE, generateRandom(this.packetRate));
-            this.bus.push();
-            this.packetsReceived++;
-
-            this.backoffCounter = 0;
+                this.packetsReceived++;
+                this.backoffCounter = 0;
+            }
         }
     }
 
     protected void jam() {
         if (t_current == 0) {
             this.bus.push();
-            if (this.backoffCounter < 10) {
-                this.backoffCounter++;
-            }
-
+            this.backoffCounter = Math.max(backoffCounter + 1, 9);
             this.setStateAndTime(NodeState.BACKOFF, generateRandomBackoff(this.backoffCounter));
         }
     }

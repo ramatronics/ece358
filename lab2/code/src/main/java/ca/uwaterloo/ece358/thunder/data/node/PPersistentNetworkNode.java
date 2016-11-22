@@ -43,10 +43,7 @@ public class PPersistentNetworkNode extends NetworkNode {
     }
 
     private void handleCollision() {
-        if (this.backoffCounter < 10) {
-            this.backoffCounter++;
-        }
-
+        this.backoffCounter = Math.max(backoffCounter + 1, 9);
         this.setStateAndTime(NodeState.BACKOFF, generateRandomBackoff(this.packetRate));
     }
 }
