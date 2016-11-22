@@ -1,6 +1,6 @@
 package ca.uwaterloo.ece358.thunder.data.state;
 
-public enum NetworkState {
+public enum BusState {
     IDLE,
     BUSY,
     COLLISION

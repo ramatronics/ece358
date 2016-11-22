@@ -7,60 +7,64 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Simulator {
-    private List<NetworkNode> nodes;
-    private Matrix network;
-    private int packetLength;
-    private long ticks;
-    private double p;
-    private int N;
-    private long lambda;
+    private final List<NetworkNode> nodes;
+    private final NetworkBus networkBus;
 
-    public Simulator(long ticks, int N, long lambda, int packetLength, double p) {
+    private final long ticks;
+    private final long packetRate;
+    private final int packetLength;
+    private final int nodeCount;
+    private final double persistence;
+
+    public Simulator(long ticks, int nodeCount, long packetRate, int packetLength, double persistence) {
         this.nodes = new ArrayList<NetworkNode>();
-        this.N = N;
-        this.lambda = lambda;
-        this.packetLength = packetLength * 8;
+
         this.ticks = ticks;
-        this.p = p;
-        this.network = new Matrix();
 
+        this.packetRate = packetRate;
+        this.packetLength = packetLength * 8;
 
+        this.nodeCount = nodeCount;
+        this.persistence = persistence;
+
+        this.networkBus = new NetworkBus();
     }
 
     public void run() {
         this.nodes.clear();
 
-        for (int i = 0; i < N; i++) {
-            this.nodes.add(generateNode(i, lambda, p));
+        for (int i = 0; i < nodeCount; i++) {
+            this.nodes.add(generateNode(i, packetRate, persistence));
         }
 
         for (int i = 0; i < this.ticks; i++) {
             for (NetworkNode n : this.nodes) {
                 n.process();
             }
-            this.network.reset();
+            this.networkBus.cycle();
         }
     }
 
-    public void printMetrics(){
-        int totalSent = 0;
-        long delayTime = 0;
+    public void printMetrics() {
+        int totalRequestsCompleted = 0;
+        long totalDelayTime = 0;
+
         for (NetworkNode n : nodes) {
-            totalSent += n.getRequestsCompleted();
-            delayTime += n.getDelayTime();
+            totalRequestsCompleted += n.getPacketsReceived();
+            totalDelayTime += n.getDelay();
         }
 
-        double throughput = (double)totalSent / (double)ticks;
-        double averageDelay = (double)delayTime / (double)totalSent;
+        final double throughput = (double) totalRequestsCompleted / (double) ticks;
+        final double averageDelay = (double) totalDelayTime / (double) totalRequestsCompleted;
 
         StringBuilder sb = new StringBuilder();
-        sb.append(this.N);
+        sb.append(this.nodeCount);
         sb.append(",");
-        sb.append(this.lambda);
+        sb.append(this.packetRate);
         sb.append(",");
-        sb.append(this.p);
+        sb.append(this.persistence);
         sb.append(",");
-        sb.append(totalSent);
+        sb.append(totalRequestsCompleted);
         sb.append(",");
         sb.append(ticks);
         sb.append(",");
@@ -72,16 +76,12 @@ public class Simulator {
     }
 
     private NetworkNode generateNode(int i, long lambda, double p) {
-        if (p == 0) {
-            return new NetworkNode(this.network, computePropogation(i), lambda, this.packetLength, p);
-        } else {
-            return new PPersistentNetworkNode(this.network, computePropogation(i), lambda, this.packetLength, p);
-        }
-    }
+        final long propagationDelay = (long) ((((double) i * 10.0) / 2E8) * 1E6);
 
-    private static long computePropogation(int index) {
-        double distance = (double) index * 10.0;
-        double delaySeconds = distance / 2E8;
-        return (long) (delaySeconds * 1E6);
+        if (p == 0.0 || p == 1.0) {
+            return new NetworkNode(propagationDelay, this.networkBus, lambda, this.packetLength, p);
+        } else {
+            return new PPersistentNetworkNode(propagationDelay, this.networkBus, lambda, this.packetLength, p);
+        }
     }
 }

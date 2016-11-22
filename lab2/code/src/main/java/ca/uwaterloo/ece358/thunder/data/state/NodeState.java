@@ -1,6 +1,6 @@
 package ca.uwaterloo.ece358.thunder.data.state;
 
-public enum ChannelState {
+public enum NodeState {
     IDLE,
     SENSING,
     SLOT_WAIT,

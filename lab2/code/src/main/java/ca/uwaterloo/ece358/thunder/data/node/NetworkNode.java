@@ -1,64 +1,69 @@
 package ca.uwaterloo.ece358.thunder.data.node;
 
-import ca.uwaterloo.ece358.thunder.data.Matrix;
-import ca.uwaterloo.ece358.thunder.data.state.ChannelState;
-import ca.uwaterloo.ece358.thunder.data.state.NetworkState;
+import ca.uwaterloo.ece358.thunder.data.NetworkBus;
+import ca.uwaterloo.ece358.thunder.data.state.BusState;
+import ca.uwaterloo.ece358.thunder.data.state.NodeState;
 
 public class NetworkNode {
-    protected static final Integer T_JAMMING = 48;
-    protected static final Integer T_SENSING = T_JAMMING * 2;
+    protected static final int JAMMING_TIME = 48;
+    protected static final int SENSING_TIME = 96;
 
-    protected long propogationDelay;
-    private long requestsCompleted;
-    protected long t;
-    private long lambda;
-    private long delayTime;
+    protected NetworkBus bus;
+    protected NodeState state;
 
-    protected ChannelState state;
-    protected Matrix network;
+    protected long propagationDelay;
+
+    protected long t_current;
+    protected long t_delay;
 
     protected int packetLength;
+    protected long packetRate;
+
     protected int backoffCounter;
+    protected long packetsReceived;
 
-    protected double p;
+    protected double persistence;
 
-    public NetworkNode(Matrix network, long propagationDelay, long lambda, int packetLength, double p) {
-        this.propogationDelay = propagationDelay;
-        this.lambda = lambda;
+    public NetworkNode(long propagationDelay, NetworkBus networkBus, long packetRate, int packetLength, double persistence) {
+        this.bus = networkBus;
+        this.state = NodeState.IDLE;
+
+        this.propagationDelay = propagationDelay;
+
+        this.t_current = generateRandom(packetRate);
+        this.t_delay = 0;
+
         this.packetLength = packetLength;
-        this.p = p;
-        this.network = network;
+        this.packetRate = packetRate;
 
         this.backoffCounter = 0;
-        this.t = randomVariable();
-        this.requestsCompleted = 0;
-        this.delayTime = 0;
-        this.state = ChannelState.IDLE;
-        this.p = p;
+        this.packetsReceived = 0;
 
+        this.persistence = persistence;
     }
 
-    public long getRequestsCompleted() {
-        return this.requestsCompleted;
+    protected static long generateRandom(double a) {
+        final double uniRandom = Math.random();
+        return (long) ((Math.log(1 - uniRandom) / ((-1) * (a))) * 1000000);
     }
 
-    public long getDelayTime() {
-        return this.delayTime;
+    protected static long generateRandomBackoff(double beb) {
+        return (long) ((Math.random() * (Math.pow(2, beb) - 1)) * 1024);
     }
 
     public void process() {
-        this.t--;
+        this.t_current--;
 
-        if (state != ChannelState.IDLE) {
-            this.delayTime++;
+        if (this.state != NodeState.IDLE) {
+            this.t_delay++;
         }
 
-        switch (state) {
+        switch (this.state) {
             case IDLE:
                 this.idle();
                 break;
             case SENSING:
-                this.sensing();
+                this.sense();
                 break;
             case RANDOM_WAIT:
                 this.randomWait();
@@ -67,10 +72,10 @@ public class NetworkNode {
                 this.slotWait();
                 break;
             case TRANSMITTING:
-                this.transmitting();
+                this.transmit();
                 break;
             case JAMMING:
-                this.jamming();
+                this.jam();
                 break;
             case BACKOFF:
                 this.backoff();
@@ -78,83 +83,79 @@ public class NetworkNode {
         }
     }
 
+    protected void slotWait() { }
+
+    public long getPacketsReceived() {
+        return this.packetsReceived;
+    }
+
+    public long getDelay() {
+        return this.t_delay;
+    }
+
     protected void idle() {
-        if (this.t == 0) {
-            this.state = ChannelState.SENSING;
-            this.t = T_SENSING;
+        if (t_current == 0) {
+            this.setStateAndTime(NodeState.SENSING, SENSING_TIME);
         }
     }
 
-    protected void sensing() {
-        if (!this.network.getState().equals(NetworkState.IDLE)) {
-            if (this.p == 0.0) {
-                this.t = backoffRandom();
-                this.state = ChannelState.RANDOM_WAIT;
-            }
-        } else {
-            if (this.t == 0) {
-                this.state = ChannelState.TRANSMITTING;
-                this.network.incoming();
-                this.t = this.propogationDelay + this.packetLength;
-            }
+    protected boolean preSense() {
+        if (!bus.getNetworkState().equals(BusState.IDLE)) {
+            this.setStateAndTime(NodeState.RANDOM_WAIT, generateRandomBackoff(this.backoffCounter));
+            return true;
+        }
+
+        return this.t_current != 0;
+    }
+
+    protected void sense() {
+        if(!preSense()) {
+            this.setStateAndTime(NodeState.TRANSMITTING, this.propagationDelay + this.packetLength);
+            this.bus.sense();
         }
     }
 
     protected void randomWait() {
-        if (this.t == 0) {
-            this.t = T_SENSING;
-            this.state = ChannelState.SENSING;
+        if (this.t_current > 0) {
+            return;
         }
+
+        this.setStateAndTime(NodeState.SENSING, SENSING_TIME);
     }
 
-    protected void transmitting() {
-        if (this.network.getState().equals(NetworkState.COLLISION)) {
-            this.state = ChannelState.JAMMING;
-            this.t = T_JAMMING;
+    protected void transmit() {
+        if (this.bus.getNetworkState().equals(BusState.COLLISION)) {
+            this.setStateAndTime(NodeState.JAMMING, JAMMING_TIME);
+            return;
         }
 
-        if (this.t == 0) {
-            this.state = ChannelState.IDLE;
-            this.network.outgoing();
-
-            this.t = randomVariable();
-            this.requestsCompleted++;
+        if (t_current == 0) {
+            this.setStateAndTime(NodeState.IDLE, generateRandom(this.packetRate));
+            this.bus.push();
+            this.packetsReceived++;
             this.backoffCounter = 0;
         }
     }
 
-    protected void slotWait() {
+    protected void jam() {
+        if(t_current == 0) {
+            this.bus.push();
+            if (this.backoffCounter < 10) {
+                this.backoffCounter++;
+            }
 
-    }
-
-    protected void jamming() {
-        if (this.t > 0) {
-            return;
+            this.setStateAndTime(NodeState.BACKOFF, generateRandomBackoff(this.backoffCounter));
         }
-
-        this.state = ChannelState.BACKOFF;
-        this.network.outgoing();
-
-        if (this.backoffCounter < 10) {
-            this.backoffCounter++;
-        }
-
-        this.t = backoffRandom();
     }
 
     protected void backoff() {
-        if (t == 0) {
-            this.state = ChannelState.SENSING;
-            this.t = T_SENSING;
+        if (t_current == 0) {
+            this.setStateAndTime(NodeState.SENSING, SENSING_TIME);
         }
     }
 
-    protected long randomVariable() {
-        double uniformRandomVariable = Math.random();
-        return (long) ((Math.log(1 - uniformRandomVariable) / (-this.lambda)) * 1000000.0);
-    }
-
-    protected long backoffRandom() {
-        return (long) ((Math.random() * (Math.pow(2.0, this.backoffCounter) - 1.0)) * 512.0);
+    protected void setStateAndTime(NodeState toSet, long time) {
+        this.state = toSet;
+        this.t_current = time;
     }
 }
